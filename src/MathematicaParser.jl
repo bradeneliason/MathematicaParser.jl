@@ -45,18 +45,19 @@ struct Inv<:MxNode val end
 struct Pow<:MxNode
     base
     expn
-    function Pow(b, v)
-        # Only create a Pow type if there is a nonempty second argument
-        if length(v) == 0
-            return b
-        elseif length(v) == 1
-            return new(b, v[1])
-        else
-            # If there is a "power tower" like 2^3^5
-            return new(b, Pow(v[1], v[2:end]))
-        end
+end
+function Pow(b, v::Vector)
+    # Only create a Pow type if there is a nonempty second argument
+    if length(v) == 0
+        return b
+    elseif length(v) == 1
+        return Pow(b, v[1])
+    else
+        # If there is a "power tower" like 2^3^5
+        return Pow(b, Pow(v[1], v[2:end]))
     end
 end
+
 
 Base.:(==)(p1::Pow, p2::Pow) = (p1.base == p2.base) && (p1.expn == p2.expn)
 

@@ -3,7 +3,7 @@ using ParserCombinator
 using Test
 
 ################################################################################
-##                                                                            ##
+#                                                                              #
 #                                Unit Testing                                  #
 #                                                                              #
 ################################################################################
@@ -68,6 +68,16 @@ funtestdict = Dict(
 end
 
 
+# Order of operations
+@testset "Order of Operations" begin
+    @test parsemathematica("a^b")[1] ==  Pow(:a, :b)
+    @test parsemathematica("a^b^c")[1] ==  Pow(:a, Pow(:b, :c))
+    @test parsemathematica("2+3*4")[1] == Sum([2, Prd([3, 4])])
+    @test parsemathematica("4*-6*(3 * 7 + 5) ")[1] == Prd([4, -6, Sum([Prd([3, 7]), 5])])
+    @test parsemathematica("7^-3*2")[1] == Prd([Pow(7, -3), 2])
+end
+
+
 # parsemathematica("--x")
 # parsemathematica("1+2+3")
 # parsemathematica("Sin[x] * 1")
@@ -84,7 +94,6 @@ end
 # parsemathematica("x^7")
 # parsemathematica("2*x^7")
 # parsemathematica("a^b")
-@test parsemathematica("a^b^c")[1] ==  Pow(:a, [:b, :c])
 
 # Challenge cases:
 # TODO:
