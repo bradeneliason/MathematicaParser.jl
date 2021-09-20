@@ -78,6 +78,26 @@ end
 end
 
 
+parsemathematica("Gamma[x,2*x]/x^3")
+parsemathematica("Gamma[x, 2*x]/x^3")
+
+afuntestdict = [
+    "f[x]"              => Fun(:f, Args[Args([:x])]),
+    "f'[x]"             => Fun(:Derivative, Args[Args(1), Args(:f), Args([:x])]),
+    "f''[x]"            => Fun(:Derivative, Args[Args(2), Args(:f), Args([:x])]),
+    "f'''[x]"           => Fun(:Derivative, Args[Args(3), Args(:f), Args([:x])]),
+    "f'[x]/f[x]"        => Prd([Fun(:Derivative, Args[Args(1), Args(:f), Args([:x])]), Inv(Fun(:f, Args[Args([:x])]))]),
+    "Sin[x] + f'[x]"    => Sum([Fun(:Sin, Args[Args([:x])]), Fun(:Derivative, Args[Args(1), Args(:f), Args([:x])])]),
+    "f[g'[x]]"          => Fun(:f, Args[Args([Fun(:Derivative, Args[Args(1), Args(:g), Args([:x])])])]),
+]
+@testset "Derivative shorthand" begin
+    for (t,r) in afuntestdict
+        @test parsemathematica(t)[1] == r
+    end
+end
+
+
+
 # parsemathematica("--x")
 # parsemathematica("1+2+3")
 # parsemathematica("Sin[x] * 1")
