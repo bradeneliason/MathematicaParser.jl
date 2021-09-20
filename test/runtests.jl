@@ -84,7 +84,7 @@ end
 # parsemathematica("x^7")
 # parsemathematica("2*x^7")
 # parsemathematica("a^b")
-# parsemathematica("a^b^c")
+@test parsemathematica("a^b^c")[1] ==  Pow(:a, [:b, :c])
 
 # Challenge cases:
 # TODO:

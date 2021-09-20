@@ -58,6 +58,9 @@ struct Pow<:MxNode
     end
 end
 
+Base.:(==)(p1::Pow, p2::Pow) = (p1.base == p2.base) && (p1.expn == p2.expn)
+
+
 struct Args<:MxNode val end
 
 struct Fun<:MxNode
