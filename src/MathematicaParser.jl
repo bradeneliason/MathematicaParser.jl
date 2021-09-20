@@ -3,6 +3,7 @@ module MathematicaParser
 export parsemathematica
 export MxNode, Args, Fun, Inv, Neg, Pow, Prd, Sum
 
+##
 using ParserCombinator
 
 ################################################################################
@@ -149,19 +150,32 @@ expr = Delayed();
 #   ⋅ Starts with "[", includs one or more sub expression separated by a comma
 #   ⋅ Creates an Args types from the input
 #   ⋅ Ends with a "]"
-args = sqr_beg + (expr + (P"," + expr)[0:end] |> collect > Args) + sqr_end;
+args = sqr_beg + (expr + (P"," + spc_star + expr)[0:end] |> collect > Args) + sqr_end;
 
 # A pattern for Functions
 # Starts with a capital letter and is followed by 1 or more argument sets
-# TODO: single letter functions including lower case
 fun = p"[A-Z][a-zA-Z\d]*" + args[1:end] |> f -> Fun(Symbol(f[1]), f[2:end]);
+
+# Anonymous Functions with derivative shorthand
+# TODO: single letter functions including lower case
+function deriv(f, n::Int, args)
+    if n == 0
+        Fun(Symbol(f), [args])
+    else
+        Fun(:Derivative, Args[Args(n), Args(Symbol(f)), args])
+    end
+end
+anonfun = p"[a-zA-Z\d]+" + (e"'"[0:end] |> length) + args[1:end] > deriv 
+
+fun2 = fun | anonfun
 
 # Pattern for a "value" which can be...
 #   ⋅ a subexpression in parentheses,
 #   ⋅ a function,
 #   ⋅ a number, or
 #   ⋅ a variable 
-val = (par_beg + expr + par_end) | fun | num | var;
+# val = (par_beg + expr + par_end) | fun | num | var;
+val = (par_beg + expr + par_end) | fun2 | num | var;
 
 # TODO: perhaps have different behaviors for -(x+2) and -2
 #   ⋅ -(x+2) could create a Neg type
@@ -189,7 +203,11 @@ function parsemathematica(s::AbstractString)
     end
 end
 
-parse_one("[x]", args)
-parse_one("Sin[x]", fun)
 
+# parse_one("f[x]", expr )[1]
+##
+# How to match anonymous and pattern functions without submatches in normal functions
+
+
+##
 end
