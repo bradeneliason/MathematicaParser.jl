@@ -97,3 +97,20 @@ afuntestdict = [
 end
 
 
+convtestdict = [
+    "1*2 + 3"           => :(1 * 2 + 3),
+    "3^7^8"             => :(3 ^ (7 ^ 8)),
+    "3/8"               => :(3 * (1 / 8)),
+    "-5 +9"             => :(-5 + 9),
+    "Sin[x]"            => :(Sin(x)),
+    "-Sin[x]"           => :(-1 * Sin(x)),
+    "Sin[a,b][y][z]"    => :(Sin(a, b, y, z)),
+    "4*-6*(3 ^ 7 + 5) + Sin[x]" => :(4 * -6 * (3 ^ 7 + 5) + Sin(x)),
+]
+@testset "Conversion to Expressions" begin
+    for (t,r) in convtestdict
+        # println( parsemathematica(t)[1])
+        # println(toexpr(parsemathematica(t)[1]))
+        @test toexpr(parsemathematica(t)[1]) == r
+    end
+end

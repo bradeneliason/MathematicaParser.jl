@@ -1,6 +1,6 @@
 module MathematicaParser
 
-export parsemathematica
+export parsemathematica, toexpr
 export MxNode, Args, Fun, Inv, Neg, Pow, Prd, Sum
 
 ##
@@ -40,6 +40,7 @@ struct Prd<:MxNode
     end
 end
 
+# TODO: consider making a Div object with numerator and denominator
 struct Inv<:MxNode val end
 struct Neg<:MxNode val end
 Neg(n::Number) = - one(n)
@@ -140,6 +141,16 @@ pow_op = E"^" + spc_star
 ##                                                                            ##
 #                                 Expressions                                  #
 #                                                                              #
+# Patterns are nested in order of operator precedence
+#   ⋅ Comparators/equals/etc
+#   ⋅ Parseing numbers, parentheses, functions
+#   ⋅ Negative numbers
+#       ⋅  -1^3  →  Pow(-1, 3) or (-1)³
+#       ⋅ 2-1^3  →  Sum(Any[2, Neg(Pow(1, 3))]) or 2 - (1³)
+#   ⋅ Exponents
+#   ⋅ Multiplication/division
+#   ⋅ Addition/Subtraction
+#                                                                              #
 ################################################################################
 
 
@@ -171,18 +182,6 @@ end
 anonfun = p"[a-zA-Z\d]+" + (e"'"[0:end] |> length) + args[1:end] > deriv 
 
 fun2 = fun | anonfun
-
-# Patterns are nested in order of operator precedence
-#   ⋅ Comparators/equals/etc
-#   ⋅ Parseing numbers, parentheses, functions
-#   ⋅ Negative numbers
-#       ⋅ -1^3   →  Pow(-1, 3) or (-1)³
-#       ⋅ 2-1^3  →  Sum(Any[2, Neg(Pow(1, 3))]) or 2 - (1³)
-#   ⋅ Exponents
-#   ⋅ Multiplication/division
-#   ⋅ Addition/Subtraction
-
-# Insert comparators here
 
 # Pattern for a "value" which can be...
 #   ⋅ a subexpression in parentheses,
@@ -220,4 +219,44 @@ end
 
 
 ##
+
+toexpr(x::Number) = x
+toexpr(x::Symbol) = x
+toexpr(s::Symbol) = s
+toexpr(a::Args) = toexpr.(a.val)
+toexpr(av::Vector{Args}) = vcat([toexpr(a) for a in av]...) # Flattens arg sets
+
+toexpr(f::Sum) = Expr(:call, :+, toexpr.(f.val)...)
+toexpr(f::Prd) = Expr(:call, :*, toexpr.(f.val)...)
+toexpr(f::Pow) = Expr(:call, :^, f.base, toexpr(f.expn))
+toexpr(f::Inv) = Expr(:call, :/, 1, toexpr(f.val))
+toexpr(f::Neg) = Expr(:call, :*, -1, toexpr(f.val))
+
+function toexpr(f::Fun)
+    # Apply the conversion between functions here
+    Expr(:call, f.fun, toexpr(f.argsets)...)
+end
+
+
+##
+# myshow(x::Number, depth=0) = x
+
+# function myshow(x::MxNode, depth=0)
+#     indent = "--"^depth
+#     println(indent, typeof(x))
+#     for f in fieldnames(typeof(x))
+#         v = getfield(x,f)
+#         # @info f, v
+#         # print()
+#         println("  "^(depth+1),myshow.(v, depth+1))
+#     end
+#     return nothing
+# end
+
+# foo = parsemathematica("1^2 + 3")[1]
+# foo = parsemathematica("4*-6*(3 ^ 7 + 5)")[1]
+# @show foo;
+# myshow(foo);
+
+
 end
