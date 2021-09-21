@@ -40,8 +40,9 @@ struct Prd<:MxNode
     end
 end
 
-struct Neg<:MxNode val end
 struct Inv<:MxNode val end
+struct Neg<:MxNode val end
+Neg(n::Number) = - one(n)
 
 struct Pow<:MxNode
     base
@@ -59,9 +60,7 @@ function Pow(b, v::Vector)
     end
 end
 
-
 Base.:(==)(p1::Pow, p2::Pow) = (p1.base == p2.base) && (p1.expn == p2.expn)
-
 
 struct Args<:MxNode val end
 
@@ -156,6 +155,10 @@ args = sqr_beg + (expr + (P"," + spc_star + expr)[0:end] |> collect > Args) + sq
 # Starts with a capital letter and is followed by 1 or more argument sets
 fun = p"[A-Z][a-zA-Z\d]*" + args[1:end] |> f -> Fun(Symbol(f[1]), f[2:end]);
 
+# A pattern for lists,
+# Any number of expression separated by commas enclosed in curly braces
+list = crl_beg + (expr + (P"," + spc_star + expr)[0:end] + crl_end |> collect);
+
 # Anonymous Functions with derivative shorthand
 # TODO: single letter functions including lower case
 function deriv(f, n::Int, args)
@@ -169,13 +172,25 @@ anonfun = p"[a-zA-Z\d]+" + (e"'"[0:end] |> length) + args[1:end] > deriv
 
 fun2 = fun | anonfun
 
+# Patterns are nested in order of operator precedence
+#   ⋅ Comparators/equals/etc
+#   ⋅ Parseing numbers, parentheses, functions
+#   ⋅ Negative numbers
+#       ⋅ -1^3   →  Pow(-1, 3) or (-1)³
+#       ⋅ 2-1^3  →  Sum(Any[2, Neg(Pow(1, 3))]) or 2 - (1³)
+#   ⋅ Exponents
+#   ⋅ Multiplication/division
+#   ⋅ Addition/Subtraction
+
+# Insert comparators here
+
 # Pattern for a "value" which can be...
 #   ⋅ a subexpression in parentheses,
 #   ⋅ a function,
 #   ⋅ a number, or
 #   ⋅ a variable 
 # val = (par_beg + expr + par_end) | fun | num | var;
-val = (par_beg + expr + par_end) | fun2 | num | var;
+val = (par_beg + expr + par_end) | fun2 | num | var | list;
 
 # TODO: perhaps have different behaviors for -(x+2) and -2
 #   ⋅ -(x+2) could create a Neg type
@@ -202,11 +217,6 @@ function parsemathematica(s::AbstractString)
         @warn "Cannot parse expression: $s"
     end
 end
-
-
-# parse_one("f[x]", expr )[1]
-##
-# How to match anonymous and pattern functions without submatches in normal functions
 
 
 ##
