@@ -8,10 +8,10 @@ This project is in no way affiliated with Mathematica or Wolfram Research, Inc.
 
 ## TODO
   - Implicit multiplication
-  - ~~Single quote ("prime") shorthand for derivatives~~ 
-  - ~~ Problem with extra whitespace possibly~~ 
-  - ~~ Mathematica lists~~ 
   - If statements and comparitors 
   - Mathematica variables like `$VersionNumber`
+  - ~~Single quote ("prime") shorthand for derivatives~~ 
+  - ~~Problem with extra whitespace possibly~~ 
+  - ~~Mathematica lists~~ 
   - ~~Create a Julia expression from syntax tree~~
   - ~~Automatically convert negative numbers~~
